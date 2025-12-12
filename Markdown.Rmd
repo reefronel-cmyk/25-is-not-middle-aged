@@ -4,7 +4,7 @@ output: html_document
 date: "2025-12-12"
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=TRUE}
 ## Cleaning Data Script - Reef
 
 librarian::shelf(readxl)
