@@ -5,23 +5,94 @@ date: "2025-12-12"
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+## Cleaning Data Script - Reef
+
+librarian::shelf(readxl)
+librarian::shelf(tidyverse)
+
+# Exploring the Data ------------------------------------------------------
+
+
+A <- read_excel("A.xlsx")
+B <- read_excel("B.xlsx")
+P <- read_excel("P.xlsx")
+Q <- read_excel("SouthEast.xlsx")
+
+check_levels <- function(X) {for (x in colnames(X)) {
+  cat("\nColumn:", x, "\n")
+  print(levels(factor(A[[x]])))
+}}
+
+colnames(A)
+colnames(B)
+colnames(P)
+colnames(Q)
+check_levels(A) # no inconsistencies
+check_levels(B) # no inconsistencies
+check_levels(P)
+check_levels(Q)
+Q <- Q %>%
+  select("Age" = "Age","Region" = "Region",
+    "PH" = "Phusical",
+    "MH" = "Mental",
+    "Smoker" = "Smoker", "Belief" = "Belief",
+    "SES5" = "SES5", "Gender" = "Gender" )
+
+
+P$PH[which(P$PH == "Yes")]<- "Y"
+P$PH[which(P$PH == "No")]<- "N"
+
+Q$PH[which(Q$PH == "YES")]<- "Y"
+Q$PH[which(Q$PH == "NO")]<- "N"
+
+head(Q)
+
+A_B <- rbind(A,B)
+levels(A_B$Region)
+P_Q <- rbind(P,Q)
+
+DATA <- rbind(A_B, P_Q)
+write.csv(DATA, "DATA.csv")
+
 ```
 
 ## R Markdown
 
 Test
 
-```{r cars}
-summary(cars)
+```{r DATA}
+## This is the Data Analysis Script
+
+
+# Precleaned Data -----------------------------------------------------------
+##Physical Health
+#1 is belief, 0 is no
+
+#Model
+DATA$PHBio <-ifelse(DATA$PH=="Y",1,0)
+DATA$PHBio <- as.factor(DATA$PHBio)
+DATA$BeliefBio<- ifelse(DATA$Belief=="Y",1,0)
+DATA$BeliefBio <- as.factor(DATA$BeliefBio)
+PhysicalBelief <- glm(BeliefBio~PHBio, data=DATA, family="binomial")
+summary(PhysicalBelief)
+confint(PhysicalBelief)
+#Table
+prop.table(table(DATA$PH, DATA$Belief),margin = 2)
+
+##Mental Health
+#1 is belief, 0 is no
+#Model
+DATA$MHBio <-ifelse(DATA$MH=="Y",1,0)
+DATA$MHBio <- as.factor(DATA$MHBio)
+DATA$BeliefBio<- ifelse(DATA$Belief=="Y",1,0)
+DATA$BeliefBio <- as.factor(DATA$BeliefBio)
+
+MentalBelief <- glm(BeliefBio~MHBio, data=DATA, family="binomial")
+summary(MentalBelief)
+confint(MentalBelief)
+#Table
+prop.table(table(DATA$MH, DATA$Belief),margin = 2)
+
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
